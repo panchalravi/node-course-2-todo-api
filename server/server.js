@@ -1,7 +1,8 @@
-var express = require('express');
-var bodyParser = require('body-parser');
+const _ = require('lodash');
+const express = require('express');
+const bodyParser = require('body-parser');
 var { mongoose } = require('./db/mongoose');
-var { ObjectID } = require('mongodb');
+const { ObjectID } = require('mongodb');
 
 var { Todo } = require('./models/todo');
 var { User } = require('./models/user');
@@ -59,10 +60,37 @@ app.delete('/todos/:id', (req, res) => {
     }).catch(e => res.send(400).send(e));
 });
 
+app.patch('/todos/:id', (req, res) => {
+    var id = req.params.id;
+    var body = _.pick(req.body, ['text', 'completed']);
+
+    if (!ObjectID.isValid(id)) {
+        return res.status(404).send({ error: 'Record not found' });
+    }
+
+    if (_.isBoolean(body.completed) && body.completed) {
+        body.completedAt = new Date().getTime();
+    } else {
+        body.completed = false;
+        body.completedAt = null;
+    }
+
+    Todo.findByIdAndUpdate(id, { $set: body }, { new: true })
+        .then((todo) => {
+            console.log(todo);
+            if (!todo) {
+                return res.status(404).send({ error: 'Record not found' });
+            }
+            res.send({ todo });
+        }).catch((e) => {
+            res.status(400).send();
+        })
+});
+
 app.listen(port, () => {
     console.log(`Started on port ${port}`);
 });
 
 module.exports = {
     app
-}
+};
