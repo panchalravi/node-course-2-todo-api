@@ -77,7 +77,6 @@ app.patch('/todos/:id', (req, res) => {
 
     Todo.findByIdAndUpdate(id, { $set: body }, { new: true })
         .then((todo) => {
-            console.log(todo);
             if (!todo) {
                 return res.status(404).send({ error: 'Record not found' });
             }
